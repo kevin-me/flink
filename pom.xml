@@ -33,6 +33,14 @@
             <artifactId>flink-runtime-web_2.11</artifactId>
             <version>${flink.version}</version>
         </dependency>
+
+        <dependency>
+
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>5.1.45</version>
+
+        </dependency>
     </dependencies>
     <build>
         <sourceDirectory>src/main/scala</sourceDirectory>
