@@ -37,6 +37,7 @@ class MultipartMysqlSource extends ParallelSourceFunction[User] {
       val statement = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)
       // Execute Query
       val rs = statement.executeQuery("SELECT * FROM user")
+      rs.setFetchSize(5);
       // Iterate Over ResultSet
       while (rs.next) {
         val user = new User(rs.getString("username"), rs.getInt("age"))
@@ -53,5 +54,5 @@ class MultipartMysqlSource extends ParallelSourceFunction[User] {
   }
 }
 
-case class User(userName: String, age: Int) {
+case class User(userName: String, age: Int) extends Serializable {
 }
