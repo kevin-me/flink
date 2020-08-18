@@ -13,14 +13,13 @@ object MyMultipartSourceMysql {
     //添加source
     val getSource: DataStream[User] = environment.addSource(new MultipartMysqlSource).setParallelism(2)
     //处理
-    getSource.setParallelism(1).print()
+    getSource.setParallelism(4).print()
     environment.execute()
   }
 
 }
 
 class MultipartMysqlSource extends ParallelSourceFunction[User] {
-  private var number = 1L
   private var isRunning = true
 
 
