@@ -33,8 +33,16 @@ object ListStateByTime {
     //数据  "tony", "2020-08-18 13:06:08"
     //     "tony", "2020-08-18 13:06:07"
 
-    sourceStream.flatMap(x => x.split(" "))
-      .map(x => (x.split(",")(0), x.split(",")(1))).keyBy(_._1).
+    val userTime: DataStream[String] = sourceStream.flatMap(x => x.split(" "))
+
+    userTime.print()
+
+
+    val spilt: DataStream[(String, String)] = userTime.map(x => (x.split(",")(0), x.split(",")(1)))
+
+    spilt.print()
+
+    spilt.keyBy(_._1).
       flatMap(new UserTimeWithList).print()
 
     //    env.fromCollection(List(
