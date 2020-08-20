@@ -1,7 +1,7 @@
 import org.apache.flink.api.java.tuple.Tuple
 import org.apache.flink.streaming.api.TimeCharacteristic
 import org.apache.flink.streaming.api.functions.AssignerWithPeriodicWatermarks
-import org.apache.flink.streaming.api.scala.{DataStream, StreamExecutionEnvironment}
+import org.apache.flink.streaming.api.scala.{DataStream, OutputTag, StreamExecutionEnvironment}
 import org.apache.flink.streaming.api.scala.function.ProcessWindowFunction
 import org.apache.flink.streaming.api.watermark.Watermark
 import org.apache.flink.streaming.api.windowing.time.Time
@@ -9,14 +9,16 @@ import org.apache.flink.streaming.api.windowing.windows.TimeWindow
 import org.apache.flink.util.Collector
 
 /**
- * 000001,1461756862000
- * 000001,1461756872000
- * 000001,1461756866000
- * 000001,1461756873000
- * 000001,1461756874000
- * 000001,1461756875000
- * 000001,1461756879000
- * 000001,1461756880000
+000001,1461756862000
+000001,1461756866000
+000001,1461756868000
+000001,1461756869000
+000001,1461756870000
+000001,1461756862000
+000001,1461756871000
+000001,1461756872000
+000001,1461756862000
+000001,1461756863000
  * 使用周期性的生成watermark解决数据的延迟或者乱序，统计时间窗口大小为5s的每个用户出现的次数，允许最大的延迟时间3s，并且使用侧输出流收集延迟太久的数据。
  */
 
@@ -39,8 +41,11 @@ object OutOfOrderStreamPeriodicWaterMark {
     //数据处理
     val mapStream: DataStream[(String, Long)] = sourceStream.map(x => (x.split(",")(0), x.split(",")(1).toLong))
 
+    //定义一个侧输出流的标签，用于收集迟到太多的数据
+    val lateTag=new OutputTag[(String, Long)]("late")
+
     //添加水位线
-    mapStream.assignTimestampsAndWatermarks(
+    val result: DataStream[(String, Long)] = mapStream.assignTimestampsAndWatermarks(
 
       new AssignerWithPeriodicWatermarks[(String, Long)] {
 
@@ -75,7 +80,7 @@ object OutOfOrderStreamPeriodicWaterMark {
       .keyBy(0)
 
       .timeWindow(Time.seconds(5)) //5秒的数据
-
+      .sideOutputLateData(lateTag)
       .process(
         /**
          * 每一个参数的含义
@@ -107,7 +112,11 @@ object OutOfOrderStreamPeriodicWaterMark {
             " |当前的watermark:" + watermark)
           out.collect((value, sum))
         }
-      }).print()
-    environment.execute()
+      })
+    //打印延迟太多的数据
+    result.getSideOutput(lateTag).print("late")
+
+    //打印
+    result.print("ok")
   }
 }
